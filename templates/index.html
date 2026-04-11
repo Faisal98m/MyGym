@@ -199,9 +199,9 @@ async function renderToday() {
       cards += `<tr>
         <td>${s}</td>
         <td><input class="set-input" type="number" value="${repsVal}" placeholder="—"
-          onchange="logSet('${ex.exercise}',${s},'reps',this.value)"></td>
+          oninput="logSet('${ex.exercise}',${s},'reps',this.value)"></td>
         <td><input class="set-input" type="number" value="${weightVal}" placeholder="BW"
-          onchange="logSet('${ex.exercise}',${s},'weight',this.value)"></td>
+          oninput="logSet('${ex.exercise}',${s},'weight',this.value)"></td>
         <td><button class="check-btn ${done?'done':''}" onclick="toggleSet('${ex.exercise}',${s},this)"></button></td>
       </tr>`;
     }
