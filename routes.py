@@ -172,3 +172,19 @@ def accept_adaptation():
     conn.commit()
     conn.close()
     return jsonify({"ok": True})
+
+@bp.route("/debug/github")
+def debug_github():
+    import urllib.request, urllib.error, os
+    token = os.environ.get("GITHUB_TOKEN")
+    repo = os.environ.get("GITHUB_REPO")
+    url = f"https://api.github.com/repos/{repo}"
+    req = urllib.request.Request(url, headers={
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github+json"
+    })
+    try:
+        with urllib.request.urlopen(req) as r:
+            return r.read().decode()
+    except urllib.error.HTTPError as e:
+        return f"{e.code}: {e.read().decode()}"
