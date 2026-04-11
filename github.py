@@ -11,6 +11,7 @@ GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
 VAULT_FOLDER = os.environ.get("VAULT_FOLDER", "gym")
 
 def push_session_to_github(date, day_key, day_label, exercises):
+    print(f"GITHUB_TOKEN set: {bool(GITHUB_TOKEN)}, GITHUB_REPO: {GITHUB_REPO}")
     if not GITHUB_TOKEN or not GITHUB_REPO:
         return {"ok": False, "error": "GITHUB_TOKEN or GITHUB_REPO not set"}
 
@@ -46,7 +47,9 @@ def push_session_to_github(date, day_key, day_label, exercises):
         with urllib.request.urlopen(req) as resp:
             return {"ok": True, "filename": filename}
     except urllib.error.HTTPError as e:
-        return {"ok": False, "error": e.read().decode()}
+        error_body = e.read().decode()
+        print(f"GITHUB ERROR: {e.code} {error_body}")
+        return {"ok": False, "error": error_body}
 
 def _get_existing_sha(url, headers):
     req = urllib.request.Request(url, headers=headers, method="GET")
