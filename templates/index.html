@@ -458,6 +458,82 @@ body {
   pointer-events: none;
   white-space: nowrap;
   z-index: 999;
+
+/*Summary Card*/
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  margin-top: 4px;
+}
+.summary-header { text-align: center; margin-bottom: 24px; }
+.summary-tick-big {
+  font-size: 36px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.summary-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.summary-date {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.summary-volume {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--accent-dim);
+  border: 1px solid rgba(200,241,53,0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.summary-volume-num {
+  font-family: var(--mono);
+  font-size: 36px;
+  font-weight: 500;
+  color: var(--accent);
+}
+.summary-volume-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.summary-ex {
+  margin-bottom: 16px;
+}
+.summary-ex-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.summary-set {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  padding: 4px 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+}
+.summary-set.done { color: var(--text); }
+.summary-tick { color: var(--accent); }
+.summary-next {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
 }
 .toast.show { opacity: 1; }
 </style>
@@ -772,11 +848,59 @@ async function completeSession() {
   });
   const data = await res.json();
 
-  const adaptRes = await fetch(`/api/adapt/${currentDay}?date=${today}`);
-  adaptSuggestions = await adaptRes.json();
+  const nextRes = await fetch('/api/current_day');
+  const nextData = await nextRes.json();
 
-  showToast(data.ok ? '✓ session saved to obsidian' : 'saved locally — check github config');
-  renderToday();
+  showToast(data.ok ? '✓ saved to obsidian' : 'saved locally');
+  renderSummary(nextData.day_key);
+}
+
+function renderSummary(nextDayKey) {
+  const prog = programmeData[currentDay];
+  const sess = sessionData[currentDay] || {};
+
+  let totalVolume = 0;
+  let exRows = '';
+
+  prog.forEach(ex => {
+    exRows += `<div class="summary-ex">
+      <div class="summary-ex-name">${ex.exercise}</div>`;
+    for (let s = 1; s <= ex.sets; s++) {
+      const key = `${ex.exercise}__${s}`;
+      const logged = sess[key] || {};
+      const reps = logged.reps || ex.reps || '—';
+      const weight = logged.weight || ex.weight || 0;
+      const done = logged.done;
+      if (done && reps !== '—' && weight) {
+        totalVolume += parseFloat(reps) * parseFloat(weight);
+      }
+      exRows += `<div class="summary-set${done?' done':''}">
+        set ${s} — ${reps} reps × ${weight || 'BW'}kg
+        ${done ? '<span class="summary-tick">✓</span>' : ''}
+      </div>`;
+    }
+    exRows += `</div>`;
+  });
+
+  const nextLabel = DAY_LABELS[nextDayKey] || nextDayKey;
+
+  const container = document.getElementById('view-today');
+  const strip = container.querySelector('.day-strip')?.outerHTML || '';
+
+  container.innerHTML = strip + `
+    <div class="summary-card">
+      <div class="summary-header">
+        <div class="summary-tick-big">✓</div>
+        <div class="summary-title">session complete</div>
+        <div class="summary-date">${today} · ${DAY_LABELS[currentDay]}</div>
+      </div>
+      <div class="summary-volume">
+        <span class="summary-volume-num">${Math.round(totalVolume).toLocaleString()}</span>
+        <span class="summary-volume-label">kg total volume</span>
+      </div>
+      <div class="summary-exercises">${exRows}</div>
+      <div class="summary-next">next up — ${nextLabel}</div>
+    </div>`;
 }
 
 async function acceptAdapt(i) {
