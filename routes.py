@@ -173,3 +173,21 @@ def accept_adaptation():
     conn.close()
     return jsonify({"ok": True})
 
+@bp.route("/api/current_day", methods=["GET"])
+def current_day():
+    sequence = ['day1', 'day2', 'day4', 'day5']
+    conn = get_db()
+    last = conn.execute(
+        "SELECT day_key FROM sessions WHERE done=1 ORDER BY date DESC, id DESC LIMIT 1"
+    ).fetchone()
+    conn.close()
+
+    if not last:
+        return jsonify({"day_key": "day1"})
+
+    last_key = last["day_key"]
+    if last_key not in sequence:
+        return jsonify({"day_key": "day1"})
+
+    next_idx = (sequence.index(last_key) + 1) % len(sequence)
+    return jsonify({"day_key": sequence[next_idx]})

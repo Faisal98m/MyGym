@@ -845,7 +845,9 @@ async function renderHistory() {
     </div>`).join('');
 }
 
-selectDay(currentDay);
+fetch('/api/current_day')
+  .then(r => r.json())
+  .then(data => selectDay(data.day_key));
 </script>
 </body>
 </html>
