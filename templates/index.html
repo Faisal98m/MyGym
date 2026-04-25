@@ -697,10 +697,10 @@ async function renderToday() {
   dots += `</div>`;
 
   // nav
-  const nav = `<div class="ex-nav">
-    <button class="nav-btn" onclick="goToEx(${currentExIdx-1})" ${currentExIdx===0?'disabled':''}>← prev</button>
-    <button class="nav-btn next" onclick="goToEx(${currentExIdx+1})" ${currentExIdx===totalEx-1?'disabled':''}>next →</button>
-  </div>`;
+const nav = `<div class="ex-nav">
+  <button class="nav-btn" id="btn-prev" onclick="goToEx(currentExIdx-1)" ${currentExIdx===0?'disabled':''}>← prev</button>
+  <button class="nav-btn next" id="btn-next" onclick="goToEx(currentExIdx+1)" ${currentExIdx===prog.length-1?'disabled':''}>next →</button>
+</div>`;
 
   // session progress
   const totalSets = prog.reduce((a,e)=>a+e.sets,0);
