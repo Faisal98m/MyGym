@@ -213,43 +213,47 @@ function buildSessionHeader(dayLabel, programme, session, currentExIdx) {
 }
 
 function buildSummaryDetails(programme, session) {
-  let totalVolume = 0;
   let exerciseRows = '';
   programme.forEach(exercise => {
-    exerciseRows += `<div class="summary-ex"><div class="summary-ex-name">${exercise.exercise}</div>`;
+    let pills = '';
     for (let setNum = 1; setNum <= exercise.sets; setNum++) {
       const key = getSetKey(exercise.exercise, setNum);
       const logged = session[key] || {};
-      const reps = logged.reps || exercise.reps || '—';
-      const weight = logged.weight || exercise.weight || 0;
-      const done = logged.done;
-      if (done && reps !== '—' && weight) totalVolume += parseFloat(reps) * parseFloat(weight);
-      exerciseRows += `<div class="summary-set${done ? ' done' : ''}">
-        set ${setNum} — ${reps} reps × ${weight || 'BW'}kg
-        ${done ? '<span class="summary-tick">✓</span>' : ''}
-      </div>`;
+      if (!logged.done) continue;
+      const reps = logged.reps || exercise.reps;
+      const weight = logged.weight || exercise.weight;
+      const label = reps && weight ? `${reps} × ${weight}kg`
+                  : reps           ? `${reps} reps`
+                  : weight         ? `${weight}kg`
+                  : '—';
+      pills += `<div class="pill">${label}</div>`;
     }
-    exerciseRows += `</div>`;
+    if (!pills) return;
+    exerciseRows += `
+      <div class="ex">
+        <div class="ex-name">${exercise.exercise}</div>
+        <div class="set-row">${pills}</div>
+      </div>`;
   });
-  return {totalVolume, exerciseRows};
+  return exerciseRows;
 }
 
 function buildSummary(nextDayKey, currentDay, today, dayLabels, programme, session) {
-  const details = buildSummaryDetails(programme, session);
+  const exerciseRows = buildSummaryDetails(programme, session);
   const nextLabel = dayLabels[nextDayKey] || nextDayKey;
-  return `<div class="summary-card">
-    <div class="summary-header">
-      <div class="summary-tick-big">✓</div>
-      <div class="summary-title">session complete</div>
-      <div class="summary-date">${today} · ${dayLabels[currentDay]}</div>
-    </div>
-    <div class="summary-volume">
-      <span class="summary-volume-num">${Math.round(details.totalVolume).toLocaleString()}</span>
-      <span class="summary-volume-label">kg total volume</span>
-    </div>
-    <div class="summary-exercises">${details.exerciseRows}</div>
-    <div class="summary-next">next up — ${nextLabel}</div>
-  </div>`;
+  return `
+    <div class="summary-card">
+      <div class="flash">
+        <div class="flash-tick">✓</div>
+        <div class="flash-title">session complete</div>
+        <div class="flash-date">${today} · ${dayLabels[currentDay]}</div>
+      </div>
+      <div class="ex-list">${exerciseRows}</div>
+      <div class="next-pill">
+        <span class="next-arrow">→</span>
+        <span class="next-text">next: ${nextLabel}</span>
+      </div>
+    </div>`;
 }
 
 // --- renderers: write to the DOM, receive all data as params ---
