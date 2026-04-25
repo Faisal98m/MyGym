@@ -718,8 +718,7 @@ async function renderToday() {
 
 
 
-  container.innerHTML = strip + banners + header + cards + dots + nav + completeBtn;
-}
+container.innerHTML = strip + banners + header + cards + dots + nav + `<div class="complete-wrap"></div>`;}
 
 function renderExCard() {
   document.querySelectorAll('.ex-card').forEach((c,i) => {
