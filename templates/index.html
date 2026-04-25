@@ -661,8 +661,8 @@ async function renderToday() {
     for (let s = 1; s <= ex.sets; s++) {
       const key = `${ex.exercise}__${s}`;
       const logged = (sessionData[currentDay]||{})[key] || {};
-      const repsVal = logged.reps !== undefined ? logged.reps : (ex.reps || '');
-      const weightVal = logged.weight !== undefined ? logged.weight : (ex.weight || '');
+      const repsVal = logged.reps ?? ex.reps ?? '';
+      const weightVal = logged.weight ?? ex.weight ?? '';
       const done = logged.done ? true : false;
       cards += `<div class="set-row">
         <div class="set-num">${s}</div>
