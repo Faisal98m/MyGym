@@ -1,12 +1,15 @@
-// STATE
+// =============================================================================
+// STATE — single source of truth, never mutated outside INTERACTIONS
+// =============================================================================
+
 const state = {
   dayKeys: ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7'],
   dayLabels: {
-    day1: 'lower â€” squat',
-    day2: 'upper â€” push/pull',
+    day1: 'lower — squat',
+    day2: 'upper — push/pull',
     day3: 'rest',
-    day4: 'lower â€” hinge',
-    day5: 'upper â€” vertical + arms',
+    day4: 'lower — hinge',
+    day5: 'upper — vertical + arms',
     day6: 'rest',
     day7: 'rest'
   },
@@ -20,7 +23,10 @@ const state = {
   activeView: 'today'
 };
 
-// API
+// =============================================================================
+// API — all fetch calls live here, nowhere else
+// =============================================================================
+
 const api = {
   async getCurrentDay() {
     const res = await fetch('/api/current_day');
@@ -79,7 +85,10 @@ const api = {
   }
 };
 
-// UI
+// =============================================================================
+// UI — render functions only. receive data as params, never fetch, never read state
+// =============================================================================
+
 function qs(selector, root = document) {
   return root.querySelector(selector);
 }
@@ -108,6 +117,8 @@ function setActiveView(name) {
   });
 }
 
+// --- builders: return HTML strings, no DOM writes ---
+
 function buildDayStrip(dayKeys, dayLabels, restDays, currentDay) {
   const buttons = dayKeys.map(key => {
     const rest = restDays.has(key) ? ' rest' : '';
@@ -117,14 +128,10 @@ function buildDayStrip(dayKeys, dayLabels, restDays, currentDay) {
   return `<div class="day-strip">${buttons}</div>`;
 }
 
-function renderRestDay(container, dayStrip) {
-  container.innerHTML = dayStrip + `<div class="rest-card"><div class="rest-icon">ðŸŒ™</div><div class="rest-label">rest day</div><div class="rest-sub">recovery is part of the programme</div></div>`;
-}
-
 function buildAdaptBanners(suggestions) {
   return suggestions.map((suggestion, index) => `
     <div class="adapt-banner">
-      <div><div class="adapt-text">${suggestion.exercise}</div><div class="adapt-sub">beat target â€” try ${suggestion.suggested_weight}kg next week</div></div>
+      <div><div class="adapt-text">${suggestion.exercise}</div><div class="adapt-sub">beat target — try ${suggestion.suggested_weight}kg next week</div></div>
       <div class="adapt-actions">
         <button class="adapt-accept" data-adapt-index="${index}">accept</button>
         <button class="adapt-dismiss" data-adapt-index="${index}">dismiss</button>
@@ -132,21 +139,9 @@ function buildAdaptBanners(suggestions) {
     </div>`).join('');
 }
 
-function getSetKey(exercise, setNum) {
-  return `${exercise}__${setNum}`;
-}
-
-function getDoneSetCount(session) {
-  return Object.values(session || {}).filter(set => set.done).length;
-}
-
-function getTotalSetCount(programme) {
-  return programme.reduce((total, exercise) => total + exercise.sets, 0);
-}
-
 function buildExerciseMeta(exercise) {
-  const note = [exercise.unit, exercise.note].filter(Boolean).join(' Â· ');
-  return `${exercise.sets} sets${exercise.reps ? ' Ã— ' + exercise.reps + ' reps' : ''}${exercise.weight ? ' Â· ' + exercise.weight + (exercise.unit || 'kg') : ''}${note ? ' Â· ' + note : ''}`;
+  const note = [exercise.unit, exercise.note].filter(Boolean).join(' · ');
+  return `${exercise.sets} sets${exercise.reps ? ' × ' + exercise.reps + ' reps' : ''}${exercise.weight ? ' · ' + exercise.weight + (exercise.unit || 'kg') : ''}${note ? ' · ' + note : ''}`;
 }
 
 function buildSetRows(exercise, session) {
@@ -162,7 +157,7 @@ function buildSetRows(exercise, session) {
       <div class="set-field">
         <div class="set-label">reps</div>
         <input class="set-input${done ? ' confirmed' : ''}" type="number" inputmode="decimal"
-          value="${repsVal}" placeholder="â€”"
+          value="${repsVal}" placeholder="—"
           data-ex="${exercise.exercise}" data-set="${setNum}" data-field="reps">
       </div>
       <div class="set-field">
@@ -187,11 +182,6 @@ function buildExerciseCards(programme, session, currentExIdx) {
   return `<div class="ex-card-wrap">${cards}</div>`;
 }
 
-function isExerciseDone(exercise, session) {
-  return Array.from({length: exercise.sets}, (_, index) => getSetKey(exercise.exercise, index + 1))
-    .every(key => session[key]?.done);
-}
-
 function buildExerciseDots(programme, session, currentExIdx) {
   const dots = programme.map((exercise, index) => {
     const active = index === currentExIdx ? ' active' : '';
@@ -203,8 +193,8 @@ function buildExerciseDots(programme, session, currentExIdx) {
 
 function buildExerciseNav(programme, currentExIdx) {
   return `<div class="ex-nav">
-    <button class="nav-btn" id="btn-prev" data-nav-offset="-1" ${currentExIdx === 0 ? 'disabled' : ''}>â† prev</button>
-    <button class="nav-btn next" id="btn-next" data-nav-offset="1" ${currentExIdx === programme.length - 1 ? 'disabled' : ''}>next â†’</button>
+    <button class="nav-btn" id="btn-prev" data-nav-offset="-1" ${currentExIdx === 0 ? 'disabled' : ''}>← prev</button>
+    <button class="nav-btn next" id="btn-next" data-nav-offset="1" ${currentExIdx === programme.length - 1 ? 'disabled' : ''}>next →</button>
   </div>`;
 }
 
@@ -222,12 +212,54 @@ function buildSessionHeader(dayLabel, programme, session, currentExIdx) {
   </div>`;
 }
 
+function buildSummaryDetails(programme, session) {
+  let totalVolume = 0;
+  let exerciseRows = '';
+  programme.forEach(exercise => {
+    exerciseRows += `<div class="summary-ex"><div class="summary-ex-name">${exercise.exercise}</div>`;
+    for (let setNum = 1; setNum <= exercise.sets; setNum++) {
+      const key = getSetKey(exercise.exercise, setNum);
+      const logged = session[key] || {};
+      const reps = logged.reps || exercise.reps || '—';
+      const weight = logged.weight || exercise.weight || 0;
+      const done = logged.done;
+      if (done && reps !== '—' && weight) totalVolume += parseFloat(reps) * parseFloat(weight);
+      exerciseRows += `<div class="summary-set${done ? ' done' : ''}">
+        set ${setNum} — ${reps} reps × ${weight || 'BW'}kg
+        ${done ? '<span class="summary-tick">✓</span>' : ''}
+      </div>`;
+    }
+    exerciseRows += `</div>`;
+  });
+  return {totalVolume, exerciseRows};
+}
+
+function buildSummary(nextDayKey, currentDay, today, dayLabels, programme, session) {
+  const details = buildSummaryDetails(programme, session);
+  const nextLabel = dayLabels[nextDayKey] || nextDayKey;
+  return `<div class="summary-card">
+    <div class="summary-header">
+      <div class="summary-tick-big">✓</div>
+      <div class="summary-title">session complete</div>
+      <div class="summary-date">${today} · ${dayLabels[currentDay]}</div>
+    </div>
+    <div class="summary-volume">
+      <span class="summary-volume-num">${Math.round(details.totalVolume).toLocaleString()}</span>
+      <span class="summary-volume-label">kg total volume</span>
+    </div>
+    <div class="summary-exercises">${details.exerciseRows}</div>
+    <div class="summary-next">next up — ${nextLabel}</div>
+  </div>`;
+}
+
+// --- renderers: write to the DOM, receive all data as params ---
+
 function renderToday({dayKeys, dayLabels, restDays, currentDay, currentExIdx, programme, session, adaptSuggestions}) {
   const container = qs('#view-today');
   const dayStrip = buildDayStrip(dayKeys, dayLabels, restDays, currentDay);
 
   if (restDays.has(currentDay)) {
-    renderRestDay(container, dayStrip);
+    container.innerHTML = dayStrip + `<div class="rest-card"><div class="rest-icon">🌙</div><div class="rest-label">rest day</div><div class="rest-sub">recovery is part of the programme</div></div>`;
     return;
   }
 
@@ -266,7 +298,7 @@ function renderCompletionControl(programme, session, currentExIdx) {
   if (!wrap) return;
   const doneSets = getDoneSetCount(session);
   wrap.innerHTML = currentExIdx === programme.length - 1
-    ? `<button class="complete-btn" ${doneSets === 0 ? 'disabled' : ''}>complete session â†’ obsidian</button>`
+    ? `<button class="complete-btn" ${doneSets === 0 ? 'disabled' : ''}>complete session → obsidian</button>`
     : '';
 }
 
@@ -301,7 +333,7 @@ function renderProgramme(programmes, dayKeys, dayLabels, restDays) {
       html += `<tr>
         <td>${exercise.exercise}</td>
         <td><input class="prog-input" type="number" value="${exercise.sets}" data-prog-id="${exercise.id}" data-field="sets"></td>
-        <td><input class="prog-input" type="number" value="${exercise.reps || ''}" placeholder="â€”" data-prog-id="${exercise.id}" data-field="reps"></td>
+        <td><input class="prog-input" type="number" value="${exercise.reps || ''}" placeholder="—" data-prog-id="${exercise.id}" data-field="reps"></td>
         <td><input class="prog-input" type="number" value="${exercise.weight || ''}" placeholder="BW" data-prog-id="${exercise.id}" data-field="weight"></td>
       </tr>`;
     });
@@ -332,47 +364,31 @@ function renderSummary(nextDayKey, currentDay, today, dayLabels, programme, sess
   container.innerHTML = strip + summary;
 }
 
-function buildSummary(nextDayKey, currentDay, today, dayLabels, programme, session) {
-  const details = buildSummaryDetails(programme, session);
-  const nextLabel = dayLabels[nextDayKey] || nextDayKey;
-  return `<div class="summary-card">
-    <div class="summary-header">
-      <div class="summary-tick-big">âœ“</div>
-      <div class="summary-title">session complete</div>
-      <div class="summary-date">${today} Â· ${dayLabels[currentDay]}</div>
-    </div>
-    <div class="summary-volume">
-      <span class="summary-volume-num">${Math.round(details.totalVolume).toLocaleString()}</span>
-      <span class="summary-volume-label">kg total volume</span>
-    </div>
-    <div class="summary-exercises">${details.exerciseRows}</div>
-    <div class="summary-next">next up â€” ${nextLabel}</div>
-  </div>`;
+// =============================================================================
+// INTERACTIONS — state accessors, event handlers, and orchestration functions
+// =============================================================================
+
+// --- pure helpers (no DOM, no fetch) ---
+
+function getSetKey(exercise, setNum) {
+  return `${exercise}__${setNum}`;
 }
 
-function buildSummaryDetails(programme, session) {
-  let totalVolume = 0;
-  let exerciseRows = '';
-  programme.forEach(exercise => {
-    exerciseRows += `<div class="summary-ex"><div class="summary-ex-name">${exercise.exercise}</div>`;
-    for (let setNum = 1; setNum <= exercise.sets; setNum++) {
-      const key = getSetKey(exercise.exercise, setNum);
-      const logged = session[key] || {};
-      const reps = logged.reps || exercise.reps || 'â€”';
-      const weight = logged.weight || exercise.weight || 0;
-      const done = logged.done;
-      if (done && reps !== 'â€”' && weight) totalVolume += parseFloat(reps) * parseFloat(weight);
-      exerciseRows += `<div class="summary-set${done ? ' done' : ''}">
-        set ${setNum} â€” ${reps} reps Ã— ${weight || 'BW'}kg
-        ${done ? '<span class="summary-tick">âœ“</span>' : ''}
-      </div>`;
-    }
-    exerciseRows += `</div>`;
-  });
-  return {totalVolume, exerciseRows};
+function getDoneSetCount(session) {
+  return Object.values(session || {}).filter(set => set.done).length;
 }
 
-// INTERACTIONS
+function getTotalSetCount(programme) {
+  return programme.reduce((total, exercise) => total + exercise.sets, 0);
+}
+
+function isExerciseDone(exercise, session) {
+  return Array.from({length: exercise.sets}, (_, index) => getSetKey(exercise.exercise, index + 1))
+    .every(key => session[key]?.done);
+}
+
+// --- state accessors ---
+
 function getCurrentProgramme() {
   return state.programmeData[state.currentDay] || [];
 }
@@ -402,6 +418,98 @@ function getTodayRenderData() {
     adaptSuggestions: state.adaptSuggestions
   };
 }
+
+// --- DOM utilities used by interaction handlers ---
+
+function findSetInput(exercise, setNum, field) {
+  return qsa('.set-input').find(input =>
+    input.dataset.ex === exercise &&
+    Number(input.dataset.set) === setNum &&
+    input.dataset.field === field
+  );
+}
+
+function getSetInputs(exercise, setNum) {
+  return {
+    repsInput: findSetInput(exercise, setNum, 'reps'),
+    weightInput: findSetInput(exercise, setNum, 'weight')
+  };
+}
+
+function getExerciseIndex(exerciseName) {
+  return getCurrentProgramme().findIndex(exercise => exercise.exercise === exerciseName);
+}
+
+// --- state mutation helpers ---
+
+function updateSetState(exercise, setNum, field, value) {
+  const session = getCurrentSession();
+  const key = getSetKey(exercise, setNum);
+  if (!session[key]) session[key] = {};
+  session[key][field] = value;
+  return session[key];
+}
+
+function buildSaveSetPayload(exercise, setNum, logged) {
+  return {
+    date: state.today,
+    day_key: state.currentDay,
+    exercise,
+    set_num: setNum,
+    reps: logged.reps ?? null,
+    weight: logged.weight ?? null,
+    done: logged.done ? 1 : 0
+  };
+}
+
+function updateSetControls(button, repsInput, weightInput, done) {
+  button.classList.toggle('done', done);
+  if (repsInput) repsInput.classList.toggle('confirmed', done);
+  if (weightInput) weightInput.classList.toggle('confirmed', done);
+}
+
+function updateSetCompletion(exercise, setNum, exIdx, button) {
+  const session = getCurrentSession();
+  const key = getSetKey(exercise, setNum);
+  if (!session[key]) session[key] = {};
+
+  const nowDone = !session[key].done;
+  const programmeExercise = getCurrentProgramme()[exIdx];
+  const {repsInput, weightInput} = getSetInputs(exercise, setNum);
+  const reps = repsInput?.value || programmeExercise.reps || null;
+  const weight = weightInput?.value || programmeExercise.weight || null;
+
+  session[key].done = nowDone;
+  session[key].reps = reps;
+  session[key].weight = weight;
+  updateSetControls(button, repsInput, weightInput, nowDone);
+
+  return {reps, weight, done: nowDone};
+}
+
+function buildCompletionSaves() {
+  const saves = [];
+  getCurrentProgramme().forEach(exercise => {
+    for (let setNum = 1; setNum <= exercise.sets; setNum++) {
+      const session = getCurrentSession();
+      const key = getSetKey(exercise.exercise, setNum);
+      const logged = session[key] || {};
+      const {repsInput, weightInput} = getSetInputs(exercise.exercise, setNum);
+      saves.push(api.saveSet({
+        date: state.today,
+        day_key: state.currentDay,
+        exercise: exercise.exercise,
+        set_num: setNum,
+        reps: repsInput?.value || exercise.reps || null,
+        weight: weightInput?.value || exercise.weight || null,
+        done: logged.done ? 1 : 0
+      }));
+    }
+  });
+  return saves;
+}
+
+// --- orchestration: read state, call api, call renderers ---
 
 async function loadDay(dayKey) {
   state.currentDay = dayKey;
@@ -451,73 +559,9 @@ async function showHistoryView() {
   renderHistory(history, state.dayLabels);
 }
 
-function updateSetState(exercise, setNum, field, value) {
-  const session = getCurrentSession();
-  const key = getSetKey(exercise, setNum);
-  if (!session[key]) session[key] = {};
-  session[key][field] = value;
-  return session[key];
-}
-
-function buildSaveSetPayload(exercise, setNum, logged) {
-  return {
-    date: state.today,
-    day_key: state.currentDay,
-    exercise,
-    set_num: setNum,
-    reps: logged.reps ?? null,
-    weight: logged.weight ?? null,
-    done: logged.done ? 1 : 0
-  };
-}
-
 async function logSet(exercise, setNum, field, value) {
   const logged = updateSetState(exercise, setNum, field, value);
   await api.saveSet(buildSaveSetPayload(exercise, setNum, logged));
-}
-
-function getExerciseIndex(exerciseName) {
-  return getCurrentProgramme().findIndex(exercise => exercise.exercise === exerciseName);
-}
-
-function getSetInputs(exercise, setNum) {
-  return {
-    repsInput: findSetInput(exercise, setNum, 'reps'),
-    weightInput: findSetInput(exercise, setNum, 'weight')
-  };
-}
-
-function findSetInput(exercise, setNum, field) {
-  return qsa('.set-input').find(input =>
-    input.dataset.ex === exercise &&
-    Number(input.dataset.set) === setNum &&
-    input.dataset.field === field
-  );
-}
-
-function updateSetControls(button, repsInput, weightInput, done) {
-  button.classList.toggle('done', done);
-  if (repsInput) repsInput.classList.toggle('confirmed', done);
-  if (weightInput) weightInput.classList.toggle('confirmed', done);
-}
-
-function updateSetCompletion(exercise, setNum, exIdx, button) {
-  const session = getCurrentSession();
-  const key = getSetKey(exercise, setNum);
-  if (!session[key]) session[key] = {};
-
-  const nowDone = !session[key].done;
-  const programmeExercise = getCurrentProgramme()[exIdx];
-  const {repsInput, weightInput} = getSetInputs(exercise, setNum);
-  const reps = repsInput?.value || programmeExercise.reps || null;
-  const weight = weightInput?.value || programmeExercise.weight || null;
-
-  session[key].done = nowDone;
-  session[key].reps = reps;
-  session[key].weight = weight;
-  updateSetControls(button, repsInput, weightInput, nowDone);
-
-  return {reps, weight, done: nowDone};
 }
 
 async function toggleSet(exercise, setNum, button) {
@@ -538,33 +582,11 @@ async function toggleSet(exercise, setNum, button) {
   renderExerciseDoneDot(programme[exIdx], session, exIdx);
 }
 
-function buildCompletionSaves() {
-  const saves = [];
-  getCurrentProgramme().forEach(exercise => {
-    for (let setNum = 1; setNum <= exercise.sets; setNum++) {
-      const session = getCurrentSession();
-      const key = getSetKey(exercise.exercise, setNum);
-      const logged = session[key] || {};
-      const {repsInput, weightInput} = getSetInputs(exercise.exercise, setNum);
-      saves.push(api.saveSet({
-        date: state.today,
-        day_key: state.currentDay,
-        exercise: exercise.exercise,
-        set_num: setNum,
-        reps: repsInput?.value || exercise.reps || null,
-        weight: weightInput?.value || exercise.weight || null,
-        done: logged.done ? 1 : 0
-      }));
-    }
-  });
-  return saves;
-}
-
 async function completeSession() {
   await Promise.all(buildCompletionSaves());
   const data = await api.completeSession({date: state.today, day_key: state.currentDay});
   const nextData = await api.getCurrentDay();
-  showToast(data.ok ? 'âœ“ saved to obsidian' : 'saved locally');
+  showToast(data.ok ? '✓ saved to obsidian' : 'saved locally');
   renderSummary(nextData.day_key, state.currentDay, state.today, state.dayLabels, getCurrentProgramme(), getCurrentSession());
 }
 
@@ -573,7 +595,7 @@ async function acceptAdapt(index) {
   await api.acceptAdapt({programme_id: suggestion.programme_id, new_weight: suggestion.suggested_weight});
   state.programmeData[state.currentDay] = await api.getProgramme(state.currentDay);
   state.adaptSuggestions.splice(index, 1);
-  showToast(`updated: ${suggestion.exercise} â†’ ${suggestion.suggested_weight}kg`);
+  showToast(`updated: ${suggestion.exercise} → ${suggestion.suggested_weight}kg`);
   renderToday(getTodayRenderData());
 }
 
@@ -585,6 +607,8 @@ function dismissAdapt(index) {
 async function updateProgramme(id, field, value) {
   await api.updateProgramme(id, {[field]: parseFloat(value)});
 }
+
+// --- event handlers ---
 
 function handleTabClick(event) {
   const tab = event.target.closest('.tab');
@@ -627,6 +651,8 @@ function bindInteractions() {
   qs('#view-today').addEventListener('input', handleSetInput);
   qs('#view-programme').addEventListener('change', handleProgrammeChange);
 }
+
+// --- init ---
 
 async function init() {
   renderHeaderDate(state.today);
