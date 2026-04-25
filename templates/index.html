@@ -716,11 +716,7 @@ async function renderToday() {
     </div>
   </div>`;
 
-  const completeBtn = `<div class="complete-wrap">
-    <button class="complete-btn" onclick="completeSession()" ${doneSets===0?'disabled':''}>
-      complete session → obsidian
-    </button>
-  </div>`;
+
 
   container.innerHTML = strip + banners + header + cards + dots + nav + completeBtn;
 }
@@ -746,6 +742,17 @@ function renderNav() {
   const btns = document.querySelectorAll('.nav-btn');
   if (btns[0]) btns[0].disabled = currentExIdx === 0;
   if (btns[1]) btns[1].disabled = currentExIdx === prog.length - 1;
+
+  const totalSets = prog.reduce((a,e)=>a+e.sets,0);
+  const doneSets = Object.values(sessionData[currentDay]||{}).filter(s=>s.done).length;
+  const wrap = document.querySelector('.complete-wrap');
+  if (wrap) {
+    wrap.innerHTML = currentExIdx === prog.length - 1
+      ? `<button class="complete-btn" onclick="completeSession()" ${doneSets===0?'disabled':''}>
+          complete session → obsidian
+        </button>`
+      : '';
+  }
 }
 
 async function logSet(exercise, setNum, field, value) {
