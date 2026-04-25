@@ -2,84 +2,474 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>gym tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MyGym</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f4; color: #1a1a18; min-height: 100vh; }
+:root {
+  --bg: #0f0f0f;
+  --surface: #181818;
+  --surface2: #222222;
+  --border: #2a2a2a;
+  --text: #f0ede8;
+  --muted: #666;
+  --accent: #c8f135;
+  --accent-dim: rgba(200,241,53,0.12);
+  --danger: #ff4d4d;
+  --radius: 16px;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
 
-  .header { background: #fff; border-bottom: 1px solid #e5e4e0; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-  .header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
-  .today-date { font-size: 12px; color: #888; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-  .tab-bar { display: flex; background: #fff; border-bottom: 1px solid #e5e4e0; position: sticky; top: 53px; z-index: 9; }
-  .tab { flex: 1; padding: 12px 0; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; color: #888; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; }
-  .tab.active { color: #1a1a18; border-bottom-color: #1a1a18; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  .view { display: none; padding: 16px; }
-  .view.active { display: block; }
+/* ── HEADER ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 0;
+}
+.logo {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--accent);
+}
+.date-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface);
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
 
-  .day-pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; scrollbar-width: none; }
-  .day-pills::-webkit-scrollbar { display: none; }
-  .day-pill { flex-shrink: 0; padding: 6px 12px; font-size: 12px; font-weight: 500; border: 1px solid #ddd; border-radius: 20px; cursor: pointer; background: #fff; color: #555; white-space: nowrap; }
-  .day-pill.active { background: #1a1a18; color: #fff; border-color: #1a1a18; }
-  .day-pill.rest { opacity: 0.4; }
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 0;
+  margin: 20px 20px 0;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid var(--border);
+}
+.tab {
+  flex: 1;
+  padding: 9px 0;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  color: var(--muted);
+  border-radius: 9px;
+  border: none;
+  background: none;
+  transition: all 0.2s;
+}
+.tab.active {
+  background: var(--accent);
+  color: #0f0f0f;
+}
 
-  .exercise-card { background: #fff; border-radius: 12px; border: 1px solid #e5e4e0; padding: 14px 16px; margin-bottom: 10px; }
-  .exercise-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-  .exercise-note { font-size: 11px; color: #888; margin-bottom: 10px; }
+/* ── VIEW ── */
+.view { display: none; padding: 20px; }
+.view.active { display: block; }
 
-  .sets-table { width: 100%; border-collapse: collapse; }
-  .sets-table th { font-size: 11px; color: #aaa; font-weight: 500; padding: 0 6px 6px; text-align: center; }
-  .sets-table th:first-child { text-align: left; width: 28px; }
-  .sets-table td { padding: 4px 4px; text-align: center; border-top: 1px solid #f0efec; }
-  .sets-table td:first-child { text-align: left; font-size: 12px; color: #aaa; padding-left: 0; }
+/* ── DAY SELECTOR ── */
+.day-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 24px;
+  padding-bottom: 2px;
+}
+.day-strip::-webkit-scrollbar { display: none; }
+.day-pill {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.day-pill.active {
+  background: var(--accent);
+  color: #0f0f0f;
+  border-color: var(--accent);
+}
+.day-pill.rest { opacity: 0.35; }
 
-  .set-input { width: 60px; padding: 6px 4px; font-size: 14px; border: 1px solid #e5e4e0; border-radius: 8px; text-align: center; background: #fafaf9; color: #1a1a18; }
-  .set-input:focus { outline: none; border-color: #1a1a18; background: #fff; }
+/* ── SESSION HEADER ── */
+.session-header {
+  margin-bottom: 20px;
+}
+.session-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.session-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ex-counter {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.progress-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
 
-  .check-btn { width: 28px; height: 28px; border-radius: 8px; border: 1.5px solid #ddd; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto; transition: all 0.15s; }
-  .check-btn.done { background: #1a1a18; border-color: #1a1a18; }
-  .check-btn.done::after { content: ''; display: block; width: 10px; height: 6px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translateY(-1px); }
+/* ── EXERCISE CARD ── */
+.ex-card-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.ex-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: none;
+  animation: slideIn 0.25s ease;
+}
+.ex-card.active { display: block; }
 
-  .rest-card { background: #fff; border-radius: 12px; border: 1px solid #e5e4e0; padding: 40px 16px; text-align: center; color: #aaa; font-size: 14px; }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
 
-  .session-bar { position: sticky; bottom: 0; background: #fff; border-top: 1px solid #e5e4e0; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
-  .complete-btn { flex: 1; padding: 13px; font-size: 14px; font-weight: 600; background: #1a1a18; color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: opacity 0.15s; }
-  .complete-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .sets-progress { font-size: 13px; color: #888; white-space: nowrap; }
+.ex-name {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.ex-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
 
-  .adapt-banner { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .adapt-text { font-size: 13px; font-weight: 500; color: #15803d; }
-  .adapt-sub { font-size: 11px; color: #4ade80; margin-top: 2px; }
-  .adapt-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .adapt-accept { padding: 5px 10px; font-size: 12px; font-weight: 500; background: #15803d; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
-  .adapt-dismiss { padding: 5px 10px; font-size: 12px; background: none; border: 1px solid #bbf7d0; color: #15803d; border-radius: 6px; cursor: pointer; }
+/* ── SETS ── */
+.sets-list { display: flex; flex-direction: column; gap: 10px; }
 
-  .prog-day { margin-bottom: 24px; }
-  .prog-day-title { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .prog-table { width: 100%; background: #fff; border-radius: 12px; border: 1px solid #e5e4e0; overflow: hidden; border-collapse: collapse; }
-  .prog-table th { font-size: 11px; color: #aaa; font-weight: 500; padding: 8px 12px; text-align: left; background: #fafaf9; }
-  .prog-table td { padding: 8px 12px; font-size: 13px; border-top: 1px solid #f0efec; }
-  .prog-input { width: 58px; padding: 4px 6px; font-size: 13px; border: 1px solid #e5e4e0; border-radius: 6px; text-align: center; background: #fafaf9; color: #1a1a18; }
+.set-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 1fr 44px;
+  gap: 8px;
+  align-items: center;
+}
+.set-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+.set-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.set-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.set-input {
+  width: 100%;
+  padding: 10px 8px;
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 500;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  text-align: center;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+.set-input:focus { outline: none; border-color: var(--accent); }
+.set-input.confirmed {
+  background: var(--accent-dim);
+  border-color: rgba(200,241,53,0.3);
+  color: var(--accent);
+}
 
-  .history-item { background: #fff; border-radius: 12px; border: 1px solid #e5e4e0; padding: 14px 16px; margin-bottom: 10px; }
-  .history-date { font-size: 11px; color: #aaa; margin-bottom: 4px; }
-  .history-label { font-size: 14px; font-weight: 600; }
-  .history-empty { text-align: center; color: #aaa; font-size: 14px; padding: 60px 0; }
+.check-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.check-btn.done {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.check-btn.done::after {
+  content: '';
+  display: block;
+  width: 12px;
+  height: 7px;
+  border-left: 2.5px solid #0f0f0f;
+  border-bottom: 2.5px solid #0f0f0f;
+  transform: rotate(-45deg) translateY(-1px);
+}
 
-  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a1a18; color: #fff; padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 100; }
-  .toast.show { opacity: 1; }
+/* ── NAV CONTROLS ── */
+.ex-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  gap: 10px;
+}
+.nav-btn {
+  padding: 12px 20px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.3px;
+}
+.nav-btn:active { transform: scale(0.97); }
+.nav-btn.next {
+  flex: 1;
+  background: var(--surface);
+  border-color: var(--border);
+}
+.nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+/* ── EX DOTS ── */
+.ex-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.ex-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ex-dot.active { background: var(--accent); width: 18px; }
+.ex-dot.done { background: var(--accent); opacity: 0.5; }
+
+/* ── COMPLETE BTN ── */
+.complete-wrap {
+  margin-top: 20px;
+}
+.complete-btn {
+  width: 100%;
+  padding: 16px;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  background: var(--accent);
+  color: #0f0f0f;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.complete-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.complete-btn:active { transform: scale(0.98); }
+
+/* ── REST CARD ── */
+.rest-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 60px 20px;
+  text-align: center;
+}
+.rest-icon { font-size: 40px; margin-bottom: 12px; }
+.rest-label { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.rest-sub { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+/* ── ADAPT BANNER ── */
+.adapt-banner {
+  background: var(--accent-dim);
+  border: 1px solid rgba(200,241,53,0.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.adapt-text { font-size: 13px; font-weight: 600; color: var(--accent); }
+.adapt-sub { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
+.adapt-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.adapt-accept {
+  padding: 6px 12px; font-size: 12px; font-weight: 700;
+  background: var(--accent); color: #0f0f0f;
+  border: none; border-radius: 8px; cursor: pointer;
+}
+.adapt-dismiss {
+  padding: 6px 12px; font-size: 12px; font-weight: 600;
+  background: none; border: 1px solid var(--border);
+  color: var(--muted); border-radius: 8px; cursor: pointer;
+}
+
+/* ── PROGRAMME TAB ── */
+.prog-day { margin-bottom: 28px; }
+.prog-day-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+.prog-table {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+.prog-table th {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-align: left;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.prog-table td {
+  padding: 10px 14px;
+  font-size: 13px;
+  border-top: 1px solid var(--border);
+  vertical-align: middle;
+}
+.prog-table tr:first-child td { border-top: none; }
+.prog-input {
+  width: 56px;
+  padding: 5px 6px;
+  font-family: var(--mono);
+  font-size: 13px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  text-align: center;
+}
+
+/* ── HISTORY TAB ── */
+.history-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.history-date {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.history-label { font-size: 15px; font-weight: 700; }
+.history-empty {
+  text-align: center;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 60px 0;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: #0f0f0f;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 999;
+}
+.toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>gym tracker</h1>
-  <span class="today-date" id="header-date"></span>
+  <div class="logo">MYGYM</div>
+  <div class="date-badge" id="header-date"></div>
 </div>
 
-<div class="tab-bar">
+<div class="tabs" style="margin-top:16px;">
   <button class="tab active" onclick="showView('today')">today</button>
   <button class="tab" onclick="showView('programme')">programme</button>
   <button class="tab" onclick="showView('history')">history</button>
@@ -94,13 +484,14 @@
 <script>
 const DAY_KEYS = ['day1','day2','day3','day4','day5','day6','day7'];
 const DAY_LABELS = {
-  day1: 'lower, squat', day2: 'upper, push/pull',
-  day3: 'rest', day4: 'lower, hinge',
-  day5: 'upper, vertical + arms', day6: 'rest', day7: 'rest'
+  day1: 'lower — squat', day2: 'upper — push/pull',
+  day3: 'rest', day4: 'lower — hinge',
+  day5: 'upper — vertical + arms', day6: 'rest', day7: 'rest'
 };
 const REST_DAYS = new Set(['day3','day6','day7']);
 
 let currentDay = 'day1';
+let currentExIdx = 0;
 let today = new Date().toISOString().split('T')[0];
 let sessionData = {};
 let programmeData = {};
@@ -125,53 +516,43 @@ function showView(name) {
   if (name === 'history') renderHistory();
 }
 
-async function fetchProgramme(dayKey) {
-  const res = await fetch(`/api/programme/${dayKey}`);
-  return res.json();
-}
-
-async function fetchSession(dayKey) {
-  const res = await fetch(`/api/session/${dayKey}?date=${today}`);
-  return res.json();
-}
-
 async function selectDay(key) {
   currentDay = key;
-  const [prog, sess] = await Promise.all([fetchProgramme(key), fetchSession(key)]);
+  currentExIdx = 0;
+  const [prog, sess] = await Promise.all([
+    fetch(`/api/programme/${key}`).then(r => r.json()),
+    fetch(`/api/session/${key}?date=${today}`).then(r => r.json())
+  ]);
   programmeData[key] = prog;
   sessionData[key] = {};
   sess.forEach(s => {
-    const k = `${s.exercise}__${s.set_num}`;
-    sessionData[key][k] = s;
+    sessionData[key][`${s.exercise}__${s.set_num}`] = s;
   });
   adaptSuggestions = [];
   renderToday();
+}
+
+function goToEx(idx) {
+  currentExIdx = idx;
+  renderExCard();
+  renderDots();
+  renderNav();
 }
 
 async function renderToday() {
   const container = document.getElementById('view-today');
   const isRest = REST_DAYS.has(currentDay);
 
-  let pills = `<div class="day-pills">`;
+  // day strip
+  let strip = `<div class="day-strip">`;
   DAY_KEYS.forEach(k => {
     const rest = REST_DAYS.has(k) ? ' rest' : '';
-    pills += `<button class="day-pill${k===currentDay?' active':''}${rest}" onclick="selectDay('${k}')">${k.replace('day','d')} ${DAY_LABELS[k]}</button>`;
+    strip += `<button class="day-pill${k===currentDay?' active':''}${rest}" onclick="selectDay('${k}')">${k.replace('day','d')} ${DAY_LABELS[k]}</button>`;
   });
-  pills += `</div>`;
-
-  let banners = '';
-  adaptSuggestions.forEach((s, i) => {
-    banners += `<div class="adapt-banner">
-      <div><div class="adapt-text">${s.exercise}</div><div class="adapt-sub">beat target — suggested ${s.suggested_weight}kg</div></div>
-      <div class="adapt-actions">
-        <button class="adapt-accept" onclick="acceptAdapt(${i})">accept</button>
-        <button class="adapt-dismiss" onclick="dismissAdapt(${i})">dismiss</button>
-      </div>
-    </div>`;
-  });
+  strip += `</div>`;
 
   if (isRest) {
-    container.innerHTML = pills + banners + `<div class="rest-card">rest day. recover well.</div>`;
+    container.innerHTML = strip + `<div class="rest-card"><div class="rest-icon">🌙</div><div class="rest-label">rest day</div><div class="rest-sub">recovery is part of the programme</div></div>`;
     return;
   }
 
@@ -181,43 +562,114 @@ async function renderToday() {
   }
 
   const prog = programmeData[currentDay];
-  let cards = '';
-  prog.forEach(ex => {
+  const totalEx = prog.length;
+
+  let banners = adaptSuggestions.map((s, i) => `
+    <div class="adapt-banner">
+      <div><div class="adapt-text">${s.exercise}</div><div class="adapt-sub">beat target — try ${s.suggested_weight}kg next week</div></div>
+      <div class="adapt-actions">
+        <button class="adapt-accept" onclick="acceptAdapt(${i})">accept</button>
+        <button class="adapt-dismiss" onclick="dismissAdapt(${i})">dismiss</button>
+      </div>
+    </div>`).join('');
+
+  // exercise cards
+  let cards = `<div class="ex-card-wrap">`;
+  prog.forEach((ex, idx) => {
+    const isActive = idx === currentExIdx;
+    cards += `<div class="ex-card${isActive?' active':''}" id="ex-card-${idx}">`;
     const note = [ex.unit, ex.note].filter(Boolean).join(' · ');
-    cards += `<div class="exercise-card">
-      <div class="exercise-name">${ex.exercise}</div>
-      ${note ? `<div class="exercise-note">${note}</div>` : ''}
-      <table class="sets-table">
-        <thead><tr><th>set</th><th>reps</th><th>kg</th><th></th></tr></thead>
-        <tbody>`;
+    cards += `<div class="ex-name">${ex.exercise}</div>`;
+    cards += `<div class="ex-meta">${ex.sets} sets${ex.reps ? ' × ' + ex.reps + ' reps' : ''}${ex.weight ? ' · ' + ex.weight + (ex.unit||'kg') : ''}${note ? ' · ' + note : ''}</div>`;
+    cards += `<div class="sets-list">`;
     for (let s = 1; s <= ex.sets; s++) {
       const key = `${ex.exercise}__${s}`;
-      const logged = (sessionData[currentDay] || {})[key] || {};
+      const logged = (sessionData[currentDay]||{})[key] || {};
       const repsVal = logged.reps !== undefined ? logged.reps : (ex.reps || '');
       const weightVal = logged.weight !== undefined ? logged.weight : (ex.weight || '');
       const done = logged.done ? true : false;
-      cards += `<tr>
-        <td>${s}</td>
-        <td><input class="set-input" type="number" value="${repsVal}" placeholder="—"
-          oninput="logSet('${ex.exercise}',${s},'reps',this.value)"></td>
-        <td><input class="set-input" type="number" value="${weightVal}" placeholder="BW"
-          oninput="logSet('${ex.exercise}',${s},'weight',this.value)"></td>
-        <td><button class="check-btn ${done?'done':''}" onclick="toggleSet('${ex.exercise}',${s},this)"></button></td>
-      </tr>`;
+      cards += `<div class="set-row">
+        <div class="set-num">${s}</div>
+        <div class="set-field">
+          <div class="set-label">reps</div>
+          <input class="set-input${done?' confirmed':''}" type="number" inputmode="decimal"
+            value="${repsVal}" placeholder="—"
+            data-ex="${ex.exercise}" data-set="${s}" data-field="reps"
+            oninput="logSet('${ex.exercise}',${s},'reps',this.value)">
+        </div>
+        <div class="set-field">
+          <div class="set-label">kg</div>
+          <input class="set-input${done?' confirmed':''}" type="number" inputmode="decimal"
+            value="${weightVal}" placeholder="BW"
+            data-ex="${ex.exercise}" data-set="${s}" data-field="weight"
+            oninput="logSet('${ex.exercise}',${s},'weight',this.value)">
+        </div>
+        <button class="check-btn${done?' done':''}" onclick="toggleSet('${ex.exercise}',${s},${idx},this)"></button>
+      </div>`;
     }
-    cards += `</tbody></table></div>`;
+    cards += `</div></div>`;
   });
+  cards += `</div>`;
 
-  const totalSets = prog.reduce((a,e) => a+e.sets, 0);
+  // dots
+  let dots = `<div class="ex-dots">`;
+  prog.forEach((ex, idx) => {
+    const allDone = Array.from({length: ex.sets}, (_,i) => `${ex.exercise}__${i+1}`)
+      .every(k => (sessionData[currentDay]||{})[k]?.done);
+    dots += `<div class="ex-dot${idx===currentExIdx?' active':''}${allDone?' done':''}" onclick="goToEx(${idx})"></div>`;
+  });
+  dots += `</div>`;
+
+  // nav
+  const nav = `<div class="ex-nav">
+    <button class="nav-btn" onclick="goToEx(${currentExIdx-1})" ${currentExIdx===0?'disabled':''}>← prev</button>
+    <button class="nav-btn next" onclick="goToEx(${currentExIdx+1})" ${currentExIdx===totalEx-1?'disabled':''}>next →</button>
+  </div>`;
+
+  // session progress
+  const totalSets = prog.reduce((a,e)=>a+e.sets,0);
   const doneSets = Object.values(sessionData[currentDay]||{}).filter(s=>s.done).length;
+  const pct = totalSets > 0 ? (doneSets/totalSets*100).toFixed(0) : 0;
 
-  container.innerHTML = pills + banners + cards + `
-    <div class="session-bar">
-      <button class="complete-btn" onclick="completeSession()" ${doneSets===0?'disabled':''}>
-        complete → obsidian
-      </button>
-      <span class="sets-progress">${doneSets}/${totalSets}</span>
-    </div>`;
+  const header = `<div class="session-header">
+    <div class="session-title">${DAY_LABELS[currentDay]}</div>
+    <div class="session-meta">
+      <span class="ex-counter">${currentExIdx+1}/${totalEx} exercises</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <span class="ex-counter">${doneSets}/${totalSets} sets</span>
+    </div>
+  </div>`;
+
+  const completeBtn = `<div class="complete-wrap">
+    <button class="complete-btn" onclick="completeSession()" ${doneSets===0?'disabled':''}>
+      complete session → obsidian
+    </button>
+  </div>`;
+
+  container.innerHTML = strip + banners + header + cards + dots + nav + completeBtn;
+}
+
+function renderExCard() {
+  document.querySelectorAll('.ex-card').forEach((c,i) => {
+    c.classList.toggle('active', i === currentExIdx);
+  });
+  // update counter
+  const prog = programmeData[currentDay];
+  const counter = document.querySelector('.ex-counter');
+  if (counter) counter.textContent = `${currentExIdx+1}/${prog.length} exercises`;
+}
+
+function renderDots() {
+  document.querySelectorAll('.ex-dot').forEach((d,i) => {
+    d.classList.toggle('active', i === currentExIdx);
+  });
+}
+
+function renderNav() {
+  const prog = programmeData[currentDay];
+  const btns = document.querySelectorAll('.nav-btn');
+  if (btns[0]) btns[0].disabled = currentExIdx === 0;
+  if (btns[1]) btns[1].disabled = currentExIdx === prog.length - 1;
 }
 
 async function logSet(exercise, setNum, field, value) {
@@ -225,61 +677,105 @@ async function logSet(exercise, setNum, field, value) {
   if (!sessionData[currentDay]) sessionData[currentDay] = {};
   if (!sessionData[currentDay][key]) sessionData[currentDay][key] = {};
   sessionData[currentDay][key][field] = value;
-  sessionData[currentDay][key].exercise = exercise;
-  sessionData[currentDay][key].set_num = setNum;
-
-  await fetch('/api/session/set', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      date: today, day_key: currentDay,
-      exercise, set_num: setNum,
-      reps: sessionData[currentDay][key].reps || null,
-      weight: sessionData[currentDay][key].weight || null,
-      done: sessionData[currentDay][key].done ? 1 : 0
-    })
-  });
-}
-
-async function toggleSet(exercise, setNum, btn) {
-  const key = `${exercise}__${setNum}`;
-  if (!sessionData[currentDay]) sessionData[currentDay] = {};
-  if (!sessionData[currentDay][key]) sessionData[currentDay][key] = {};
-  const nowDone = !sessionData[currentDay][key].done;
-  sessionData[currentDay][key].done = nowDone;
-  btn.classList.toggle('done', nowDone);
 
   await fetch('/api/session/set', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
       date: today, day_key: currentDay, exercise, set_num: setNum,
-      reps: sessionData[currentDay][key].reps || null,
-      weight: sessionData[currentDay][key].weight || null,
-      done: nowDone ? 1 : 0
+      reps: sessionData[currentDay][key].reps ?? null,
+      weight: sessionData[currentDay][key].weight ?? null,
+      done: sessionData[currentDay][key].done ? 1 : 0
+    })
+  });
+}
+
+async function toggleSet(exercise, setNum, exIdx, btn) {
+  const key = `${exercise}__${setNum}`;
+  if (!sessionData[currentDay]) sessionData[currentDay] = {};
+  if (!sessionData[currentDay][key]) sessionData[currentDay][key] = {};
+
+  const nowDone = !sessionData[currentDay][key].done;
+  sessionData[currentDay][key].done = nowDone;
+
+  // use DOM value or programme fallback
+  const prog = programmeData[currentDay][exIdx];
+  const repsInput = document.querySelector(`input[data-ex="${exercise}"][data-set="${setNum}"][data-field="reps"]`);
+  const weightInput = document.querySelector(`input[data-ex="${exercise}"][data-set="${setNum}"][data-field="weight"]`);
+  const reps = repsInput?.value || prog.reps || null;
+  const weight = weightInput?.value || prog.weight || null;
+
+  sessionData[currentDay][key].reps = reps;
+  sessionData[currentDay][key].weight = weight;
+
+  btn.classList.toggle('done', nowDone);
+  if (repsInput) repsInput.classList.toggle('confirmed', nowDone);
+  if (weightInput) weightInput.classList.toggle('confirmed', nowDone);
+
+  await fetch('/api/session/set', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      date: today, day_key: currentDay, exercise, set_num: setNum,
+      reps, weight, done: nowDone ? 1 : 0
     })
   });
 
+  // update progress bar + complete btn
   const totalSets = programmeData[currentDay].reduce((a,e)=>a+e.sets,0);
   const doneSets = Object.values(sessionData[currentDay]).filter(s=>s.done).length;
-  const btn2 = document.querySelector('.complete-btn');
-  const prog = document.querySelector('.sets-progress');
-  if (btn2) btn2.disabled = doneSets === 0;
-  if (prog) prog.textContent = `${doneSets}/${totalSets}`;
+  const pct = (doneSets/totalSets*100).toFixed(0);
+  const fill = document.querySelector('.progress-fill');
+  const completeBtn = document.querySelector('.complete-btn');
+  const counters = document.querySelectorAll('.ex-counter');
+  if (fill) fill.style.width = pct + '%';
+  if (completeBtn) completeBtn.disabled = doneSets === 0;
+  if (counters[1]) counters[1].textContent = `${doneSets}/${totalSets} sets`;
+
+  // update dot
+  const dot = document.querySelectorAll('.ex-dot')[exIdx];
+  if (dot) {
+    const ex = programmeData[currentDay][exIdx];
+    const allDone = Array.from({length:ex.sets},(_,i)=>`${ex.exercise}__${i+1}`)
+      .every(k => sessionData[currentDay][k]?.done);
+    dot.classList.toggle('done', allDone);
+  }
 }
 
 async function completeSession() {
+  const prog = programmeData[currentDay];
+  const saves = [];
+  prog.forEach((ex, exIdx) => {
+    for (let s = 1; s <= ex.sets; s++) {
+      const key = `${ex.exercise}__${s}`;
+      const logged = (sessionData[currentDay]||{})[key] || {};
+      const repsInput = document.querySelector(`input[data-ex="${ex.exercise}"][data-set="${s}"][data-field="reps"]`);
+      const weightInput = document.querySelector(`input[data-ex="${ex.exercise}"][data-set="${s}"][data-field="weight"]`);
+      saves.push(fetch('/api/session/set', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          date: today, day_key: currentDay, exercise: ex.exercise, set_num: s,
+          reps: repsInput?.value || ex.reps || null,
+          weight: weightInput?.value || ex.weight || null,
+          done: logged.done ? 1 : 0
+        })
+      }));
+    }
+  });
+  await Promise.all(saves);
+
   const res = await fetch('/api/session/complete', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ date: today, day_key: currentDay })
+    body: JSON.stringify({date: today, day_key: currentDay})
   });
   const data = await res.json();
 
   const adaptRes = await fetch(`/api/adapt/${currentDay}?date=${today}`);
   adaptSuggestions = await adaptRes.json();
 
-  showToast(data.ok ? 'session saved to obsidian' : 'saved locally — check github config');
+  showToast(data.ok ? '✓ session saved to obsidian' : 'saved locally — check github config');
   renderToday();
 }
 
@@ -288,9 +784,9 @@ async function acceptAdapt(i) {
   await fetch('/api/adapt/accept', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ programme_id: s.programme_id, new_weight: s.suggested_weight })
+    body: JSON.stringify({programme_id: s.programme_id, new_weight: s.suggested_weight})
   });
-  programmeData[currentDay] = await fetchProgramme(currentDay);
+  programmeData[currentDay] = await fetch(`/api/programme/${currentDay}`).then(r=>r.json());
   adaptSuggestions.splice(i, 1);
   showToast(`updated: ${s.exercise} → ${s.suggested_weight}kg`);
   renderToday();
@@ -306,9 +802,9 @@ async function renderProgramme() {
   let html = '';
   for (const key of DAY_KEYS) {
     if (REST_DAYS.has(key)) continue;
-    const prog = await fetchProgramme(key);
+    const prog = await fetch(`/api/programme/${key}`).then(r=>r.json());
     html += `<div class="prog-day">
-      <div class="prog-day-title">${DAY_LABELS[key]}</div>
+      <div class="prog-day-label">${DAY_LABELS[key]}</div>
       <table class="prog-table">
         <thead><tr><th>exercise</th><th>sets</th><th>reps</th><th>weight</th></tr></thead>
         <tbody>`;
@@ -329,25 +825,23 @@ async function updateProg(id, field, value) {
   await fetch(`/api/programme/${id}`, {
     method: 'PATCH',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ [field]: parseFloat(value) })
+    body: JSON.stringify({[field]: parseFloat(value)})
   });
-  if (programmeData[currentDay]) {
-    programmeData[currentDay] = await fetchProgramme(currentDay);
-  }
 }
 
 async function renderHistory() {
   const container = document.getElementById('view-history');
-  const res = await fetch('/api/history');
-  const history = await res.json();
+  const history = await fetch('/api/history').then(r=>r.json());
   if (!history.length) {
-    container.innerHTML = `<div class="history-empty">no sessions logged yet.</div>`;
+    container.innerHTML = `<div class="history-empty">no sessions logged yet</div>`;
     return;
   }
   container.innerHTML = history.map(h => `
     <div class="history-item">
-      <div class="history-date">${h.date}</div>
-      <div class="history-label">${DAY_LABELS[h.day_key] || h.day_key}</div>
+      <div>
+        <div class="history-date">${h.date}</div>
+        <div class="history-label">${DAY_LABELS[h.day_key]||h.day_key}</div>
+      </div>
     </div>`).join('');
 }
 
