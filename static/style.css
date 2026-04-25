@@ -23,7 +23,7 @@ body {
   overflow-x: hidden;
 }
 
-/* â”€â”€ HEADER â”€â”€ */
+/* ── HEADER ── */
 .header {
   display: flex;
   align-items: center;
@@ -46,7 +46,7 @@ body {
   border: 1px solid var(--border);
 }
 
-/* â”€â”€ TABS â”€â”€ */
+/* ── TABS ── */
 .tabs {
   display: flex;
   gap: 0;
@@ -76,11 +76,11 @@ body {
   color: #0f0f0f;
 }
 
-/* â”€â”€ VIEW â”€â”€ */
+/* ── VIEW ── */
 .view { display: none; padding: 20px; }
 .view.active { display: block; }
 
-/* â”€â”€ DAY SELECTOR â”€â”€ */
+/* ── DAY SELECTOR ── */
 .day-strip {
   display: flex;
   gap: 8px;
@@ -111,7 +111,7 @@ body {
 }
 .day-pill.rest { opacity: 0.35; }
 
-/* â”€â”€ SESSION HEADER â”€â”€ */
+/* ── SESSION HEADER ── */
 .session-header {
   margin-bottom: 20px;
 }
@@ -146,7 +146,7 @@ body {
   transition: width 0.3s ease;
 }
 
-/* â”€â”€ EXERCISE CARD â”€â”€ */
+/* ── EXERCISE CARD ── */
 .ex-card-wrap {
   position: relative;
   overflow: hidden;
@@ -179,7 +179,7 @@ body {
   margin-bottom: 20px;
 }
 
-/* â”€â”€ SETS â”€â”€ */
+/* ── SETS ── */
 .sets-list { display: flex; flex-direction: column; gap: 10px; }
 
 .set-row {
@@ -254,7 +254,7 @@ body {
   transform: rotate(-45deg) translateY(-1px);
 }
 
-/* â”€â”€ NAV CONTROLS â”€â”€ */
+/* ── NAV CONTROLS ── */
 .ex-nav {
   display: flex;
   align-items: center;
@@ -283,7 +283,7 @@ body {
 }
 .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
-/* â”€â”€ EX DOTS â”€â”€ */
+/* ── EX DOTS ── */
 .ex-dots {
   display: flex;
   gap: 6px;
@@ -302,7 +302,7 @@ body {
 .ex-dot.active { background: var(--accent); width: 18px; }
 .ex-dot.done { background: var(--accent); opacity: 0.5; }
 
-/* â”€â”€ COMPLETE BTN â”€â”€ */
+/* ── COMPLETE BTN ── */
 .complete-wrap {
   margin-top: 20px;
 }
@@ -323,7 +323,7 @@ body {
 .complete-btn:disabled { opacity: 0.25; cursor: not-allowed; }
 .complete-btn:active { transform: scale(0.98); }
 
-/* â”€â”€ REST CARD â”€â”€ */
+/* ── REST CARD ── */
 .rest-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -335,7 +335,7 @@ body {
 .rest-label { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
 .rest-sub { font-family: var(--mono); font-size: 12px; color: var(--muted); }
 
-/* â”€â”€ ADAPT BANNER â”€â”€ */
+/* ── ADAPT BANNER ── */
 .adapt-banner {
   background: var(--accent-dim);
   border: 1px solid rgba(200,241,53,0.25);
@@ -361,7 +361,7 @@ body {
   color: var(--muted); border-radius: 8px; cursor: pointer;
 }
 
-/* â”€â”€ PROGRAMME TAB â”€â”€ */
+/* ── PROGRAMME TAB ── */
 .prog-day { margin-bottom: 28px; }
 .prog-day-label {
   font-family: var(--mono);
@@ -408,7 +408,7 @@ body {
   text-align: center;
 }
 
-/* â”€â”€ HISTORY TAB â”€â”€ */
+/* ── HISTORY TAB ── */
 .history-item {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -434,7 +434,7 @@ body {
   padding: 60px 0;
 }
 
-/* â”€â”€ TOAST â”€â”€ */
+/* ── TOAST ── */
 .toast {
   position: fixed;
   bottom: 30px;
@@ -451,9 +451,10 @@ body {
   pointer-events: none;
   white-space: nowrap;
   z-index: 999;
+}
+.toast.show { opacity: 1; }
 
-/*Summary Card*/
-/* -- SUMMARY CARD -- */
+/* ── SUMMARY CARD ── */
 .summary-card {
   margin-top: 4px;
 }
@@ -485,20 +486,20 @@ body {
   display: flex;
   flex-direction: column;
 }
-.ex {
+.summary-ex {
   padding: 10px 0;
   border-bottom: 1px solid var(--border);
 }
-.ex:last-child {
+.summary-ex:last-child {
   border-bottom: none;
 }
-.ex-name {
+.summary-ex-name {
   font-size: 12px;
   font-weight: 700;
   color: var(--text);
   margin-bottom: 6px;
 }
-.set-row {
+.summary-set-row {
   display: flex;
   gap: 5px;
   flex-wrap: wrap;
@@ -531,5 +532,3 @@ body {
   color: var(--muted);
   font-family: var(--mono);
 }
-}
-.toast.show { opacity: 1; }
