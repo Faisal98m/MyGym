@@ -230,9 +230,9 @@ function buildSummaryDetails(programme, session) {
     }
     if (!pills) return;
     exerciseRows += `
-      <div class="ex">
-        <div class="ex-name">${exercise.exercise}</div>
-        <div class="set-row">${pills}</div>
+      <div class="summary-ex">
+        <div class="summary-ex-name">${exercise.exercise}</div>
+        <div class="summary-set-row">${pills}</div>
       </div>`;
   });
   return exerciseRows;
